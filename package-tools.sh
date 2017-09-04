@@ -5,8 +5,12 @@ set -e
 VERSION_ID=$(./make-id.sh)
 
 # TODO: other platforms handling.
-TOOLS_ARCHIVE="tools-linux64-"$VERSION_ID".tar.gz"
-LIB_ARCHIVE="lib-linux64-"$VERSION_ID".tar.gz"
+
+OUT="dist"
+INFO_OUT="$OUT/README.md"
+TOOLS_OUT="$OUT/bin"
+INCLUDE_OUT="$OUT/include"
+LIB_OUT="$OUT/lib/linux64"
 TARGET_DIR="bgfx/.build/linux64_gcc/bin"
 
 # To publish releases to.
@@ -115,46 +119,72 @@ echo "Building library & tools..."
 
 pushd bgfx
 
-make clean
+# make clean
 
-../bx/tools/bin/linux/genie --gcc=linux-gcc gmake
-make -j$(nproc) -R -C .build/projects/gmake-linux config=debug64
+# ../bx/tools/bin/linux/genie --gcc=linux-gcc gmake
+# make -j$(nproc) -R -C .build/projects/gmake-linux config=debug64
 
-../bx/tools/bin/linux/genie --with-tools --gcc=linux-gcc gmake
-make -j$(nproc) -R -C .build/projects/gmake-linux config=release64
+# ../bx/tools/bin/linux/genie --with-tools --gcc=linux-gcc gmake
+# make -j$(nproc) -R -C .build/projects/gmake-linux config=release64
 
 popd
 
-echo "Packaging built tools..."
-rm -rf tools
-mkdir tools
-cp $TARGET_DIR/geometrycRelease tools/
-cp $TARGET_DIR/shadercRelease tools/
-cp $TARGET_DIR/texturecRelease tools/
-cp $TARGET_DIR/texturevRelease tools/
-package tools $TOOLS_ARCHIVE
+rm -rf   $OUT
+mkdir -p $OUT
 
-echo "Packaging built lib..."
-rm -rf lib
-mkdir lib
-cp $TARGET_DIR/libbxDebug.a lib/
-cp $TARGET_DIR/libbimgDebug.a lib/
-cp $TARGET_DIR/libbgfxDebug.a lib/
-cp $TARGET_DIR/libbxRelease.a lib/
-cp $TARGET_DIR/libbimgRelease.a lib/
-cp $TARGET_DIR/libbgfxRelease.a lib/
-package lib $LIB_ARCHIVE
+rm -rf   $INCLUDE_OUT
+mkdir -p $INCLUDE_OUT
 
-if [ -z $(get_release_id $VERSION_ID) ]
-then
-    echo "Making a new release..."
-    create_release $VERSION_ID "$(git submodule)"
-else
-    echo "Adding assets to the existing release..."
-fi
+rm -rf   $LIB_OUT
+mkdir -p $LIB_OUT
 
-upload_asset $VERSION_ID $TOOLS_ARCHIVE
-upload_asset $VERSION_ID $LIB_ARCHIVE
+rm -rf   $TOOLS_OUT
+mkdir -p $TOOLS_OUT
 
-rm -f $TOOLS_ARCHIVE
-rm -f $LIB_ARCHIVE
+echo "Making built tools distribution..."
+cp $TARGET_DIR/shadercRelease   $TOOLS_OUT
+cp $TARGET_DIR/texturecRelease  $TOOLS_OUT
+cp $TARGET_DIR/texturevRelease  $TOOLS_OUT
+cp $TARGET_DIR/geometrycRelease $TOOLS_OUT
+
+echo "Making built lib distribution..."
+cp bgfx/include/bgfx/defines.h      $INCLUDE_OUT/defines.h
+cp bgfx/include/bgfx/c99/bgfx.h     $INCLUDE_OUT/bgfx.h
+cp bgfx/include/bgfx/c99/platform.h $INCLUDE_OUT/platform.h
+cp bx/include/bx/platform.h         $INCLUDE_OUT/bx_platform.h
+
+sed -i 's/^\#include\s\"\.\.\/defines\.h\"/\#include "defines.h"/g'  $INCLUDE_OUT/bgfx.h
+sed -i 's/^\#include\s<bx\/platform\.h>/\#include "bx_platform.h"/g' $INCLUDE_OUT/bgfx.h
+sed -i 's/^\#include\s<bx\/platform\.h>/\#include "bx_platform.h"/g' $INCLUDE_OUT/platform.h
+
+cp $TARGET_DIR/libbxDebug.a     $LIB_OUT
+cp $TARGET_DIR/libbimgDebug.a   $LIB_OUT
+cp $TARGET_DIR/libbgfxDebug.a   $LIB_OUT
+cp $TARGET_DIR/libbxRelease.a   $LIB_OUT
+cp $TARGET_DIR/libbimgRelease.a $LIB_OUT
+cp $TARGET_DIR/libbgfxRelease.a $LIB_OUT
+
+cp template.md $INFO_OUT
+git submodule >> $INFO_OUT
+
+# TODO: Move out to a separate script.
+
+# TODO: Package things accrodingly.
+# package $TOOLS_OUT $TOOLS_ARCHIVE
+# package $LIB_OUT $LIB_ARCHIVE
+
+# if [ -z $(get_release_id $VERSION_ID) ]
+# then
+#     echo "Making a new release..."
+#     create_release $VERSION_ID "$(git submodule)"
+# else
+#     echo "Adding assets to the existing release..."
+# fi
+
+# upload_asset $VERSION_ID $TOOLS_ARCHIVE
+# upload_asset $VERSION_ID $LIB_ARCHIVE
+
+# rm -f $TOOLS_ARCHIVE
+# rm -f $LIB_ARCHIVE
+
+# rm -rf $OUT

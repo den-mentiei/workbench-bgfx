@@ -1,6 +1,4 @@
-tools/
-lib/
-shared-lib/
+dist/
 .secret-token
 *.tar.gz
 *.zip
