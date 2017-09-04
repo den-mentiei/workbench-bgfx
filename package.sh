@@ -10,7 +10,7 @@ OUT="dist"
 INFO_OUT="$OUT/README.md"
 TOOLS_OUT="$OUT/bin"
 INCLUDE_OUT="$OUT/include"
-LIB_OUT="$OUT/lib/linux64"
+LIB_OUT="$OUT/lib/linux_x64"
 TARGET_DIR="bgfx/.build/linux64_gcc/bin"
 
 # To publish releases to.
@@ -119,13 +119,13 @@ echo "Building library & tools..."
 
 pushd bgfx
 
-# make clean
+make clean
 
-# ../bx/tools/bin/linux/genie --gcc=linux-gcc gmake
-# make -j$(nproc) -R -C .build/projects/gmake-linux config=debug64
+../bx/tools/bin/linux/genie --gcc=linux-gcc gmake
+make -j$(nproc) -R -C .build/projects/gmake-linux config=debug64
 
-# ../bx/tools/bin/linux/genie --with-tools --gcc=linux-gcc gmake
-# make -j$(nproc) -R -C .build/projects/gmake-linux config=release64
+../bx/tools/bin/linux/genie --with-tools --gcc=linux-gcc gmake
+make -j$(nproc) -R -C .build/projects/gmake-linux config=release64
 
 popd
 
