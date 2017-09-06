@@ -8,9 +8,9 @@ VERSION_ID=$(./make-id.sh)
 
 OUT="dist"
 INFO_OUT="$OUT/README.md"
-TOOLS_OUT="$OUT/bin"
-INCLUDE_OUT="$OUT/include"
+INCLUDE_OUT="$OUT/include/bgfx"
 LIB_OUT="$OUT/lib/linux_x64"
+TOOLS_OUT="$OUT/bin/linux_x64"
 TARGET_DIR="bgfx/.build/linux64_gcc/bin"
 
 # To publish releases to.
@@ -35,7 +35,7 @@ WGET_ARGS="--content-disposition --auth-no-challenge --no-cookie"
 CURL_ARGS="-LJO#"
 
 check_auth() {
-    curl -o /dev/null -sH "$AUTH" $GH_REPO || { echo "error: Invalid repo, token or network issue!";  exit 1; }
+    curl -o /dev/null -sH "$AUTH" $GH_REPO || { echo "error: Invalid repo, token or network issue!"; exit 1; }
 }
 
 get_release_id() {
@@ -151,6 +151,8 @@ echo "Making built lib distribution..."
 cp bgfx/include/bgfx/defines.h      $INCLUDE_OUT/defines.h
 cp bgfx/include/bgfx/c99/bgfx.h     $INCLUDE_OUT/bgfx.h
 cp bgfx/include/bgfx/c99/platform.h $INCLUDE_OUT/platform.h
+cp bgfx/src/bgfx_shader.sh          $INCLUDE_OUT/bgfx_shader.sh
+cp bgfx/src/bgfx_compute.sh         $INCLUDE_OUT/bgfx_compute.sh
 cp bx/include/bx/platform.h         $INCLUDE_OUT/bx_platform.h
 
 sed -i 's/^\#include\s\"\.\.\/defines\.h\"/\#include "defines.h"/g'  $INCLUDE_OUT/bgfx.h
