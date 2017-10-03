@@ -9,6 +9,5 @@ Prebuilt packages are published as releases.
 ## TODO
 
 * Windows
-* macOS
 * iOS
 * Android

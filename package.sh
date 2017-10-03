@@ -4,14 +4,31 @@ set -e
 
 VERSION_ID=$(./make-id.sh)
 
-# TODO: other platforms handling.
-
 OUT="dist"
-INFO_OUT="$OUT/README.md"
 INCLUDE_OUT="$OUT/include/bgfx"
-LIB_OUT="$OUT/lib/linux_x64"
-TOOLS_OUT="$OUT/bin/linux_x64"
-TARGET_DIR="bgfx/.build/linux64_gcc/bin"
+INFO_OUT="$OUT/README.md"
+
+# TODO: other platforms handling.
+case "$(uname -s)" in
+    Darwin)
+	LIB_OUT="$OUT/lib/osx_x64"
+	TOOLS_OUT="$OUT/bin/osx_x64"
+	TARGET_DIR="bgfx/.build/osx64_clang/bin"
+	GENIE="../bx/tools/bin/darwin/genie"
+	GENIE_ARGS="--gcc=osx gmake"
+	PROJECTS_DIR=".build/projects/gmake-osx"
+	;;
+    Linux)
+	LIB_OUT="$OUT/lib/linux_x64"
+	TOOLS_OUT="$OUT/bin/linux_x64"
+	TARGET_DIR="bgfx/.build/linux64_gcc/bin"
+	GENIE_ARGS="--gcc=linux-gcc gmake"
+	PROJECTS_DIR=".build/projects/gmake-linux"
+	;;
+    *)
+	echo "Unknown OS, exiting."
+	exit 1
+esac
 
 # To publish releases to.
 OWNER="den-mentiei"
@@ -121,11 +138,11 @@ pushd bgfx
 
 make clean
 
-../bx/tools/bin/linux/genie --gcc=linux-gcc gmake
-make -j$(nproc) -R -C .build/projects/gmake-linux config=debug64
+$GENIE $GENIE_ARGS
+make -j$(nproc) -R -C $PROJECTS_DIR config=debug64
 
-../bx/tools/bin/linux/genie --with-tools --gcc=linux-gcc gmake
-make -j$(nproc) -R -C .build/projects/gmake-linux config=release64
+$GENIE --with-tools $GENIE_ARGS
+make -j$(nproc) -R -C $PROJECTS_DIR config=release64
 
 popd
 
@@ -155,9 +172,10 @@ cp bgfx/src/bgfx_shader.sh          $INCLUDE_OUT/bgfx_shader.sh
 cp bgfx/src/bgfx_compute.sh         $INCLUDE_OUT/bgfx_compute.sh
 cp bx/include/bx/platform.h         $INCLUDE_OUT/bx_platform.h
 
-sed -i 's/^\#include\s\"\.\.\/defines\.h\"/\#include "defines.h"/g'  $INCLUDE_OUT/bgfx.h
-sed -i 's/^\#include\s<bx\/platform\.h>/\#include "bx_platform.h"/g' $INCLUDE_OUT/bgfx.h
-sed -i 's/^\#include\s<bx\/platform\.h>/\#include "bx_platform.h"/g' $INCLUDE_OUT/platform.h
+sed -i '.bak' 's/^\#include \"\.\.\/defines\.h\"/\#include "defines.h"/g'  $INCLUDE_OUT/bgfx.h
+sed -i '.bak' 's/^\#include <bx\/platform\.h>/\#include "bx_platform.h"/g' $INCLUDE_OUT/bgfx.h
+sed -i '.bak' 's/^\#include <bx\/platform\.h>/\#include "bx_platform.h"/g' $INCLUDE_OUT/platform.h
+rm -rf $INCLUDE_OUT/*.bak
 
 cp $TARGET_DIR/libbxDebug.a     $LIB_OUT
 cp $TARGET_DIR/libbimgDebug.a   $LIB_OUT
